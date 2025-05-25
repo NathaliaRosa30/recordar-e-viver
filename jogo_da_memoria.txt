@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Memória: Recordar é Viver - Hábitos que fazem bem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff; /* Fallback color */
+            /* Imagem de fundo como camada mais profunda */
+            background-image: url(''); /* Placeholder: substitua por sua imagem */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background-color: #ffffff; /* Fundo branco para o conteúdo do jogo */
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 95%; /* Aumentado para permitir mais visibilidade do fundo */
+        }
+
+        h1 {
+            color: #1e3a8a; /* Dark blue */
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column; /* To stack the spans vertically */
+            align-items: center; /* To center the spans */
+        }
+
+        .title-small {
+            font-size: 1.8rem; /* Smaller font size */
+            font-family: 'Inter', sans-serif; /* Keep Inter for smaller lines */
+        }
+
+        .title-large {
+            font-family: 'Pacifico', cursive; /* Applied Pacifico font */
+            font-size: 4.5rem; /* Larger font size */
+            line-height: 1; /* Adjust line height to prevent too much space */
+        }
+
+        .title-medium {
+            font-size: 2.2rem; /* Medium font size */
+            font-family: 'Inter', sans-serif; /* Keep Inter for smaller lines */
+        }
+
+
+        #initialMenu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        #startGameButton {
+            background-color: #4caf50; /* Green button */
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #startGameButton:hover {
+            background-color: #45a049;
+        }
+
+        .game-board-wrapper {
+            display: none; /* Initially hidden */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr); /* Default to 8 columns */
+            gap: 15px;
+            width: 100%;
+            max-width: 1300px; /* Max width for the 8-column grid */
+            margin-bottom: 30px;
+        }
+
+        .card {
+            width: 100%;
+            height: 180px; /* Fixed height for cards */
+            background-color: #93c5fd; /* Medium blue for card back */
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem; /* Large icon size */
+            color: #ffffff;
+            cursor: pointer;
+            transform-style: preserve-3d; /* Essential for 3D flip effect */
+            transition: transform 0.6s ease-in-out, background-color 0.3s ease;
+            position: relative; /* Important for absolute positioning of children */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            user-select: none; /* Prevent text selection */
+        }
+
+        .card.flipped {
+            transform: rotateY(180deg);
+            background-color: #dbeafe; /* Lighter blue when flipped */
+        }
+
+        .card.matched {
+            background-color: #a7f3d0; /* Green when matched */
+            pointer-events: none; /* Disable interaction for matched cards */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Faces of the card */
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Hides the back of the element when facing away */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border-radius: 15px; /* Match card border-radius */
+            box-sizing: border-box; /* Include padding in width/height */
+        }
+
+        .card-front {
+            transform: rotateY(0deg);
+            background-color: #93c5fd; /* Same as initial card color */
+            color: #ffffff; /* Color for the question mark */
+            font-size: 3rem;
+        }
+
+        .card-back {
+            transform: rotateY(180deg); /* Starts rotated 180 degrees */
+            background-color: #dbeafe; /* Lighter blue for card content */
+            color: #1e3a8a; /* Dark blue for text */
+            font-size: 1.5rem; /* Large text for explanation */
+            font-weight: 600;
+            padding: 15px;
+            line-height: 1.3;
+        }
+
+        .card-icon {
+            font-size: 3.5rem; /* Even larger icons */
+            margin-bottom: 5px;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ecfdf5; /* Light green */
+            border: 3px solid #065f46; /* Dark green border */
+            border-radius: 15px;
+            padding: 30px 40px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            text-align: center;
+            font-size: 2rem; /* Large font for messages */
+            color: #065f46; /* Dark green text */
+            font-weight: 700;
+            display: none; /* Hidden by default */
+        }
+
+        .message-box button {
+            background-color: #065f46; /* Dark green button */
+            color: #ffffff;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-box button:hover {
+            background-color: #047857; /* Slightly lighter green on hover */
+            transform: translateY(-2px);
+         }
+
+         .controls {
+             display: flex;
+             flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+             gap: 15px;
+             margin-top: 20px;
+             align-items: center;
+             justify-content: center; /* Center the buttons */
+             width: 100%; /* Ensure controls take full width for wrapping */
+         }
+
+         .controls label, .volume-control label { /* Adjusted selector for volume control label */
+            color: #1e3a8a;
+            font-weight: 600;
+            font-size: 1.2rem;
+            white-space: nowrap; /* Prevent text wrapping */
+         }
+
+         .volume-slider {
+            -webkit-appearance: none;
+            width: 150px; /* Adjust width as needed */
+            height: 10px;
+            background: #dbeafe; /* Lighter blue track */
+            outline: none;
+            opacity: 0.9;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+            border-radius: 5px;
+         }
+
+         .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #1e3a8a; /* Dark blue thumb */
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+         }
+
+         .volume-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #1e3a8a;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+         }
+
+
+         .reset-button, #backToMenuButton {
+             background-color: #ef4444; /* Red button for reset */
+             color: #ffffff;
+             padding: 15px 30px;
+             border: none;
+             border-radius: 10px;
+             font-size: 1.5rem;
+             font-weight: 600;
+             cursor: pointer;
+             transition: background-color 0.3s ease, transform 0.2s ease;
+             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+         }
+
+         #backToMenuButton {
+             background-color: #f97316; /* Orange button for back to menu */
+         }
+
+         .reset-button:hover, #backToMenuButton:hover {
+             opacity: 0.9;
+             transform: translateY(-2px);
+         }
+
+         .music-control-button { /* New class for music control buttons */
+            background-color: #64748b; /* Gray button for music */
+            color: white;
+            padding: 15px 20px; /* Adjusted padding for icon */
+            border: none;
+            border-radius: 10px;
+            font-size: 1.8rem; /* Larger icon size */
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            line-height: 1; /* Ensure icon is centered vertically */
+         }
+
+         .music-control-button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+         }
+
+         /* Responsive adjustments */
+         /* For screens smaller than 1300px, reduce to 7 columns */
+         @media (max-width: 1300px) {
+             .game-board {
+                 grid-template-columns: repeat(7, 1fr);
+                 max-width: 1150px;
+             }
+         }
+
+         /* For screens smaller than 1150px, reduce to 6 columns */
+         @media (max-width: 1150px) {
+             .game-board {
+                 grid-template-columns: repeat(6, 1fr);
+                 max-width: 1000px;
+             }
+         }
+
+         /* For screens smaller than 1000px, reduce to 5 columns */
+         @media (max-width: 1000px) {
+             .game-board {
+                 grid-template-columns: repeat(5, 1fr);
+                 max-width: 850px;
+             }
+         }
+
+         /* For screens smaller than 850px, reduce to 4 columns */
+         @media (max-width: 850px) {
+             .game-board {
+                 grid-template-columns: repeat(4, 1fr);
+                 max-width: 680px;
+             }
+             h1 {
+                 font-size: 2rem; /* Adjusted for smaller screens */
+                 margin-bottom: 20px;
+             }
+             .title-small {
+                font-size: 1.5rem;
+             }
+             .title-large {
+                font-size: 3.5rem;
+             }
+             .title-medium {
+                font-size: 1.8rem;
+             }
+             .card {
+                 height: 150px;
+             }
+             .card-front {
+                 font-size: 2.5rem;
+             }
+             .card-back {
+                 font-size: 1.2rem;
+                 padding: 10px;
+             }
+             .card-icon {
+                 font-size: 3rem;
+             }
+             .message-box {
+                 font-size: 1.5rem;
+                 padding: 20px 30px;
+             }
+             #initialMenu h1 {
+                 font-size: 2.5rem;
+             }
+             #startGameButton {
+                 font-size: 1.5rem;
+                 padding: 12px 25px;
+             }
+             .music-control-button {
+                font-size: 1.5rem;
+                padding: 12px 15px;
+             }
+         }
+
+         /* For screens smaller than 680px, reduce to 3 columns */
+         @media (max-width: 680px) {
+             .game-board {
+                 grid-template-columns: repeat(3, 1fr);
+                 max-width: 500px;
+             }
+         }
+
+         /* For screens smaller than 500px, reduce to 2 columns */
+         @media (max-width: 500px) {
+             h1 {
+                 font-size: 1.8rem; /* Adjusted for very small screens */
+                 margin-bottom: 15px;
+             }
+             .title-small {
+                font-size: 1.2rem;
+             }
+             .title-large {
+                font-size: 2.8rem;
+             }
+             .title-medium {
+                font-size: 1.5rem;
+             }
+             .game-board {
+                 grid-template-columns: repeat(2, 1fr);
+                 gap: 8px;
+                 max-width: 350px;
+             }
+             .card {
+                 height: 120px;
+                 border-radius: 10px;
+             }
+             .card-front {
+                 font-size: 2rem;
+             }
+             .card-back {
+                 font-size: 1.0rem; /* Adjusted for very small screens */
+                 padding: 8px;
+             }
+             .card-icon {
+                 font-size: 2.5rem;
+             }
+             .message-box {
+                 font-size: 1.3rem;
+                 padding: 15px 25px;
+             }
+             #initialMenu h1 {
+                 font-size: 2rem;
+             }
+             #startGameButton {
+                 font-size: 1.2rem;
+                 padding: 10px 20px;
+             }
+             .music-control-button {
+                font-size: 1.2rem;
+                padding: 10px 12px;
+             }
+         }
+
+         .hidden {
+             display: none;
+         }
+     </style>
+ </head>
+ <body>
+     <div class="game-container">
+         <div id="initialMenu">
+             <h1 id="gameTitle">
+                 <span class="title-small">Jogo da Memória</span>
+                 <span class="title-large">Recordar é Viver</span>
+                 <span class="title-medium">Hábitos que fazem bem!</span>
+             </h1>
+             <div id="imageContainer" class="flex justify-center items-center h-48 w-full">
+                 </div>
+             <button id="startGameButton">Iniciar Jogo</button>
+             <div class="volume-control flex items-center gap-2">
+                 <button id="musicControlButtonInitial" class="music-control-button">🔊</button> <label for="volumeSliderInitial">Volume:</label>
+                 <input type="range" id="volumeSliderInitial" min="0" max="100" value="30" class="volume-slider">
+             </div>
+         </div>
+
+         <div class="game-board-wrapper">
+             <div class="game-board" id="gameBoard">
+                 </div>
+         </div>
+
+         <div class="controls hidden">
+             <button class="reset-button" id="resetButton">Reiniciar Jogo</button>
+             <button id="backToMenuButton">Voltar ao Menu Inicial</button>
+             <div class="volume-control flex items-center gap-2">
+                 <button id="musicControlButtonGame" class="music-control-button">🔊</button> <label for="volumeSliderGame">Volume:</label>
+                 <input type="range" id="volumeSliderGame" min="0" max="100" value="30" class="volume-slider">
+             </div>
+         </div>
+     </div>
+
+     <div class="message-box" id="messageBox">
+         <p id="messageText"></p>
+         <button id="closeMessageButton">Ok!</button>
+     </div>
+
+     <audio id="backgroundMusic" loop src="https://ia804506.us.archive.org/7/items/lp_the-baroque-lute_johann-sebastian-bach-dieterich-buxtehude/disc1/01.05.%20Suite%20In%20G%20Minor%2C%20BWV%20995%3A%20Gavotte%20I%20-%20Gavotte%20II%20En%20Rondeau%20-%20Gavotte%20I.mp3"></audio>
+
+     <script>
+         // Data for the memory game cards
+         const cardData = [
+             {
+                 id: 'musculacao',
+                 icon: '💪', // Strong arm emoji
+                 explanation: 'Musculação: Fortalece os músculos e os ossos, dando mais força e equilíbrio para o dia a dia.'
+             },
+             {
+                 id: 'hidroginastica',
+                 icon: '🏊‍♀️', // Person swimming emoji
+                 explanation: 'Hidroginástica: Exercício na água protege as juntas e dá mais flexibilidade e bem-estar.'
+             },
+             {
+                 id: 'corrida',
+                 icon: '🏃‍♀️', // Running person emoji
+                 explanation: 'Corrida: Correr melhora o coração, a respiração e ajuda a ter mais energia e disposição.'
+             },
+             {
+                 id: 'alimentacao_saudavel',
+                 icon: '🥗', // Salad bowl emoji
+                 explanation: 'Alimentação Saudável: Comer frutas, verduras e comida de verdade dá energia e saúde para o corpo.'
+             },
+             {
+                 id: 'xadrez',
+                 icon: '♟️', // Chess pawn emoji
+                 explanation: 'Xadrez: Jogar xadrez exercita a mente, melhora o raciocínio e a memória.'
+             },
+             {
+                 id: 'palavras_cruzadas',
+                 icon: '📝', // Memo emoji
+                 explanation: 'Palavras Cruzadas: Resolver palavras cruzadas mantém a mente ativa e ajuda a lembrar das coisas.'
+             },
+             {
+                 id: 'hobbies',
+                 icon: '🎨', // Artist palette emoji
+                 explanation: 'Hobbies: Ter um hobby traz alegria, relaxa a mente e ajuda a aprender coisas novas.'
+             },
+             {
+                 id: 'grupos_sociais',
+                 icon: '🫂', // Hugging faces emoji
+                 explanation: 'Grupos Sociais: Participar de grupos e estar com pessoas faz bem para o humor, afasta a solidão e traz felicidade.'
+             },
+             {
+                 id: 'cuidados_medicos',
+                 icon: '🏥', // Hospital emoji
+                 explanation: 'Cuidados Médicos: Consultas e exames regulares ajudam a cuidar da saúde e prevenir doenças.'
+             },
+             {
+                 id: 'higiene_adequada',
+                 icon: '🧼', // Soap emoji
+                 explanation: 'Higiene Adequada: Tomar banho e cuidar da limpeza evita doenças e faz você se sentir bem.'
+             },
+             {
+                 id: 'higiene_sono',
+                 icon: '🛌', // Bed emoji
+                 explanation: 'Higiene do Sono: Dormir bem é essencial para o corpo e a mente descansarem e funcionarem melhor.'
+             },
+             {
+                 id: 'hidratacao_adequada',
+                 icon: '💧', // Water droplet emoji
+                 explanation: 'Hidratação Adequada: Beber bastante água mantém o corpo funcionando bem e a pele hidratada.'
+             }
+         ];
+
+         let cards = [];
+         let flippedCards = [];
+         let matchedPairs = 0;
+         let lockBoard = false; // To prevent flipping more than two cards at once
+
+         const gameBoard = document.getElementById('gameBoard');
+         const resetButton = document.getElementById('resetButton');
+         const messageBox = document.getElementById('messageBox');
+         const messageText = document.getElementById('messageText');
+         const closeMessageButton = document.getElementById('closeMessageButton');
+         const initialMenu = document.getElementById('initialMenu');
+         const startGameButton = document.getElementById('startGameButton');
+         const gameBoardWrapper = document.querySelector('.game-board-wrapper');
+         const backgroundMusic = document.getElementById('backgroundMusic');
+         const musicControlButtonInitial = document.getElementById('musicControlButtonInitial'); // Initial menu music button
+         const musicControlButtonGame = document.getElementById('musicControlButtonGame'); // Game screen music button
+         const backToMenuButton = document.getElementById('backToMenuButton'); // New button
+         const volumeSliderInitial = document.getElementById('volumeSliderInitial'); // Initial menu volume slider
+         const volumeSliderGame = document.getElementById('volumeSliderGame'); // Game screen volume slider
+         let musicPlaying = false; // Initialize to false
+
+         /**
+          * Shuffles an array randomly.
+          * @param {Array} array - The array to shuffle.
+          * @returns {Array} The shuffled array.
+          */
+         function shuffle(array) {
+             for (let i = array.length - 1; i > 0; i--) {
+                 const j = Math.floor(Math.random() * (i + 1));
+                 [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+             }
+             return array;
+         }
+
+         /**
+          * Creates a card element with front and back faces.
+          * @param {Object} data - The card data (id, icon, explanation).
+          * @returns {HTMLElement} The created card element.
+          */
+         function createCard(data) {
+             const card = document.createElement('div');
+             card.classList.add('card', 'rounded-xl', 'shadow-md'); // Tailwind classes for styling
+             card.dataset.id = data.id; // Store the ID to check for matches
+
+             const cardFront = document.createElement('div');
+             cardFront.classList.add('card-front');
+             cardFront.innerHTML = '❓'; // Always show question mark on the front
+
+             const cardBack = document.createElement('div');
+             cardBack.classList.add('card-back');
+             cardBack.innerHTML = '<span class="card-icon">' + data.icon + '</span>'; // Always show icon on the back for matching
+
+             card.appendChild(cardFront);
+             card.appendChild(cardBack);
+
+             card.addEventListener('click', () => flipCard(card));
+             return card;
+         }
+
+         /**
+          * Initializes the game board with shuffled cards.
+          */
+         function initializeGame() {
+             gameBoard.innerHTML = ''; // Clear existing cards
+             cards = [];
+             flippedCards = [];
+             matchedPairs = 0;
+             lockBoard = false;
+
+             const allGameCards = [];
+
+             // Create two identical icon cards for each data item
+             cardData.forEach(data => {
+                 allGameCards.push(createCard(data)); // First card with icon
+                 allGameCards.push(createCard(data)); // Second card with the same icon
+             });
+
+             shuffle(allGameCards); // Shuffle all the generated cards
+
+             allGameCards.forEach(card => {
+                 gameBoard.appendChild(card);
+             });
+         }
+
+         /**
+          * Handles the card flipping logic.
+          * @param {HTMLElement} card - The card element that was clicked.
+          */
+         function flipCard(card) {
+             if (lockBoard) return; // If board is locked, do nothing
+             if (card === flippedCards[0]) return; // Prevent double-clicking the same card
+             if (card.classList.contains('matched')) return; // Prevent flipping already matched cards
+
+             card.classList.add('flipped');
+             flippedCards.push(card);
+
+             if (flippedCards.length === 2) {
+                 lockBoard = true; // Lock the board after two cards are flipped
+                 checkForMatch();
+             }
+         }
+
+         /**
+          * Checks if the two flipped cards form a match.
+          */
+         function checkForMatch() {
+             const [firstCard, secondCard] = flippedCards;
+
+             // A match occurs if their data-id is the same (since both are now icon cards)
+             const isMatch = (firstCard.dataset.id === secondCard.dataset.id);
+
+             if (isMatch) {
+                 disableCards();
+             } else {
+                 unflipCards();
+             }
+         }
+
+         /**
+          * Disables interaction for matched cards and shows explanation.
+          */
+         function disableCards() {
+             const [firstCard, secondCard] = flippedCards;
+             firstCard.classList.add('matched');
+             secondCard.classList.add('matched');
+             matchedPairs++;
+
+             // Find the explanation for the matched pair
+             const matchedData = cardData.find(item => item.id === firstCard.dataset.id);
+             if (matchedData) {
+                 showMessage(matchedData.explanation); // Show the explanation
+                 speakText(matchedData.explanation); // Speak the explanation
+             }
+
+             // Reset board state immediately after showing message (or after a short delay if needed)
+             resetBoard();
+
+             if (matchedPairs === cardData.length) {
+                 // All pairs matched, game won!
+                 const winMessage = 'Parabéns! Você encontrou todos os pares e aprendeu sobre envelhecimento saudável!';
+                 // Show final message after a short delay to allow reading the last explanation
+                 setTimeout(() => {
+                     showMessage(winMessage);
+                     speakText(winMessage); // Speak the win message
+                 }, 2000); // Show final message after 2 seconds
+             }
+         }
+
+         /**
+          * Unflips cards if they don't match.
+          */
+         function unflipCards() {
+             setTimeout(() => {
+                 flippedCards.forEach(card => card.classList.remove('flipped'));
+                 resetBoard(); // Reset board state after un-flipping
+             }, 1500); // Cards stay flipped for 1.5 seconds before unflipping
+         }
+
+         /**
+          * Resets the flipped cards and lock board state.
+          */
+         function resetBoard() {
+             [flippedCards, lockBoard] = [[], false];
+         }
+
+         /**
+          * Displays a message box to the user.
+          * @param {string} message - The message to display.
+          */
+         function showMessage(message) {
+             messageText.innerHTML = message; // Use innerHTML to allow bolding in explanation
+             messageBox.style.display = 'block';
+         }
+
+         /**
+          * Hides the message box.
+          */
+         function hideMessageBox() {
+             messageBox.style.display = 'none';
+             // Stop any ongoing speech when the message box is closed
+             if (speechSynthesis.speaking) {
+                 speechSynthesis.cancel();
+             }
+         }
+
+         /**
+          * Speaks the given text using the Web Speech API.
+          * @param {string} text - The text to be spoken.
+          */
+         function speakText(text) {
+             // Cancel any ongoing speech to prevent overlapping
+             if (speechSynthesis.speaking) {
+                 speechSynthesis.cancel();
+             }
+
+             const utterance = new SpeechSynthesisUtterance(text);
+             utterance.lang = 'pt-BR'; // Set language to Portuguese (Brazil)
+             utterance.rate = 0.9; // Slightly slower speech for better comprehension
+
+             // Find a Portuguese voice if available
+             const voices = speechSynthesis.getVoices();
+             const ptBrVoice = voices.find(voice => voice.lang === 'pt-BR' || voice.lang === 'pt_BR');
+             if (ptBrVoice) {
+                 utterance.voice = ptBrVoice;
+             }
+
+             speechSynthesis.speak(utterance);
+         }
+
+         /**
+          * Synchronizes the state of music playing and volume across all controls.
+          */
+         function synchronizeMusicControls() {
+             // Update music button text/icon
+             if (musicPlaying) {
+                 musicControlButtonInitial.textContent = '🔇';
+                 musicControlButtonGame.textContent = '🔇';
+             } else {
+                 musicControlButtonInitial.textContent = '🔊';
+                 musicControlButtonGame.textContent = '🔊';
+             }
+             // Update slider positions
+             volumeSliderInitial.value = backgroundMusic.volume * 100;
+             volumeSliderGame.value = backgroundMusic.volume * 100;
+         }
+
+         // Event Listeners for menu and music
+         startGameButton.addEventListener('click', () => {
+             initialMenu.style.display = 'none'; // Hide initial menu
+             gameBoardWrapper.style.display = 'flex'; // Show game board
+             document.querySelector('.controls').classList.remove('hidden'); // Show controls
+             initializeGame(); // Initialize the game
+
+             // Attempt to play music when game starts (user interaction)
+             if (!musicPlaying) {
+                 backgroundMusic.play().then(() => {
+                     musicPlaying = true;
+                     synchronizeMusicControls();
+                 }).catch(error => {
+                     console.error("Autoplay prevented or other error:", error);
+                     showMessage('A música de fundo pode não ter iniciado automaticamente. Ajuste o volume na barra abaixo ou clique em iniciar jogo novamente.');
+                 });
+             }
+         });
+
+         // Music control button event listener (for initial menu)
+         musicControlButtonInitial.addEventListener('click', () => {
+             if (musicPlaying) {
+                 backgroundMusic.pause();
+                 musicPlaying = false;
+             } else {
+                 backgroundMusic.play().then(() => {
+                     musicPlaying = true;
+                 }).catch(error => {
+                     console.error("Autoplay prevented or other error:", error);
+                     showMessage('Para a música tocar, por favor, interaja com a página primeiro.');
+                 });
+             }
+             synchronizeMusicControls();
+         });
+
+         // Music control button event listener (for game screen)
+         musicControlButtonGame.addEventListener('click', () => {
+             if (musicPlaying) {
+                 backgroundMusic.pause();
+                 musicPlaying = false;
+             } else {
+                 backgroundMusic.play().then(() => {
+                     musicPlaying = true;
+                 }).catch(error => {
+                     console.error("Autoplay prevented or other error:", error);
+                     showMessage('Para a música tocar, por favor, interaja com a página primeiro.');
+                 });
+             }
+             synchronizeMusicControls();
+         });
+
+         // Volume slider event listener (for initial menu)
+         volumeSliderInitial.addEventListener('input', (event) => {
+             backgroundMusic.volume = event.target.value / 100; // Convert 0-100 to 0-1
+             synchronizeMusicControls(); // Update other slider
+         });
+
+         // Volume slider event listener (for game screen)
+         volumeSliderGame.addEventListener('input', (event) => {
+             backgroundMusic.volume = event.target.value / 100; // Convert 0-100 to 0-1
+             synchronizeMusicControls(); // Update other slider
+         });
+
+
+         resetButton.addEventListener('click', initializeGame);
+         closeMessageButton.addEventListener('click', hideMessageBox);
+
+         // New event listener for "Back to Main Menu" button
+         backToMenuButton.addEventListener('click', () => {
+             gameBoardWrapper.style.display = 'none'; // Hide game board
+             document.querySelector('.controls').classList.add('hidden'); // Hide controls
+             initialMenu.style.display = 'flex'; // Show initial menu
+
+             if (musicPlaying) {
+                 backgroundMusic.pause();
+                 musicPlaying = false;
+             }
+             initializeGame(); // Reset game state for a fresh start
+             synchronizeMusicControls(); // Update controls on return to menu
+         });
+
+         // Initial setup: hide game board, show menu, and ensure controls are visible
+         window.onload = () => {
+             gameBoardWrapper.style.display = 'none'; // Ensure game board is hidden on load
+             initialMenu.style.display = 'flex'; // Ensure initial menu is visible on load
+             document.querySelector('.controls').classList.add('hidden'); // Ensure controls are hidden on load initially
+
+             // Set initial volume and slider position
+             backgroundMusic.volume = 0.3; // Default volume to 30%
+             synchronizeMusicControls(); // Set initial state of controls
+         };
+     </script>
+ </body>
+ </html>
