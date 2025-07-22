@@ -469,41 +469,49 @@
                 id: 'musculacao',
                 icon: '💪', // Strong arm emoji
                 explanation: 'Musculação: Fortalece os músculos e os ossos, dando mais força e equilíbrio para o dia a dia.'
+		audio: 'audios/musculacao.mp3'
             },
             {
                 id: 'hidroginastica',
                 icon: '🏊‍♀️', // Person swimming emoji
                 explanation: 'Hidroginástica: Exercício na água protege as juntas e dá mais flexibilidade e bem-estar.'
+		audio: 'audios/hidroginastica.mp3'
             },
             {
                 id: 'corrida',
                 icon: '🏃‍♀️', // Running person emoji
                 explanation: 'Corrida: Correr melhora o coração, a respiração e ajuda a ter mais energia e disposição.'
+		audio: 'audios/corrida.mp3'
             },
             {
                 id: 'alimentacao_saudavel',
                 icon: '🥗', // Salad bowl emoji
                 explanation: 'Alimentação Saudável: Comer frutas, verduras e comida de verdade dá energia e saúde para o corpo.'
+		audio: 'audios/alimentacao_saudavel.mp3'
             },
             {
                 id: 'xadrez',
                 icon: '♟️', // Chess pawn emoji
                 explanation: 'Xadrez: Jogar xadrez exercita a mente, melhora o raciocínio e a memória.'
+		audio: 'audios/xadrez.mp3'
             },
             {
                 id: 'palavras_cruzadas',
                 icon: '📝', // Memo emoji
                 explanation: 'Palavras Cruzadas: Resolver palavras cruzadas mantém a mente ativa e ajuda a lembrar das coisas.'
+		audio: 'audios/palavras_cruzadas.mp3'
             },
             {
                 id: 'hobbies',
                 icon: '🎨', // Artist palette emoji
                 explanation: 'Hobbies: Ter um hobby traz alegria, relaxa a mente e ajuda a aprender coisas novas.'
+		audio: 'audios/hidroginastica.mp3'
             },
             {
                 id: 'grupos_sociais',
                 icon: '🫂', // Hugging faces emoji
                 explanation: 'Grupos Sociais: Participar de grupos e estar com pessoas faz bem para o humor, afasta a solidão e traz felicidade.'
+		audio: 'audios/grupos_sociais.mp3'
             }
             // Removidos os pares adicionais para se adequar ao 4x4 (8 pares)
         ];
@@ -522,6 +530,19 @@
         const startGameButton = document.getElementById('startGameButton');
         const gameBoardWrapper = document.querySelector('.game-board-wrapper');
         const backgroundMusic = document.getElementById('backgroundMusic');
+	const matchAudio = document.getElementById('matchAudio');
+	const finalAudio = document.getElementById('finalAudio');
+	
+	function playMatchAudio(audioSrc) {
+    		matchAudio.src = audioSrc;
+		matchAudio.currentTime = 0;
+	    	matchAudio.play();
+	}
+
+	function playFinalAudio() {
+    		finalAudio.currentTime = 0;
+ 		finalAudio.play();
+	}
         const musicControlButtonInitial = document.getElementById('musicControlButtonInitial'); // Initial menu music button
         const musicControlButtonGame = document.getElementById('musicControlButtonGame'); // Game screen music button
         const backToMenuButton = document.getElementById('backToMenuButton'); // New button
@@ -639,7 +660,7 @@
             const matchedData = cardData.find(item => item.id === firstCard.dataset.id);
             if (matchedData) {
                 showMessage(matchedData.explanation); // Show the explanation
-                speakText(matchedData.explanation); // Speak the explanation
+                playMatchAudio(matchedData.audio); // ✅ Toca o som do par
             }
 
             // Reset board state immediately after showing message (or after a short delay if needed)
@@ -651,7 +672,7 @@
                 // Show final message after a short delay to allow reading the last explanation
                 setTimeout(() => {
                     showMessage(winMessage);
-                    speakText(winMessage); // Speak the win message
+                    playFinalAudio();
                 }, 2000); // Show final message after 2 seconds
             }
         }
@@ -697,25 +718,6 @@
          * Speaks the given text using the Web Speech API.
          * @param {string} text - The text to be spoken.
          */
-        function speakText(text) {
-            // Cancel any ongoing speech to prevent overlapping
-            if (speechSynthesis.speaking) {
-                speechSynthesis.cancel();
-            }
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'pt-BR'; // Set language to Portuguese (Brazil)
-            utterance.rate = 0.9; // Slightly slower speech for better comprehension
-
-            // Find a Portuguese voice if available
-            const voices = speechSynthesis.getVoices();
-            const ptBrVoice = voices.find(voice => voice.lang === 'pt-BR' || voice.lang === 'pt_BR');
-            if (ptBrVoice) {
-                utterance.voice = ptBrVoice;
-            }
-
-            speechSynthesis.speak(utterance);
-        }
 
         /**
          * Synchronizes the state of music playing and volume across all controls.
@@ -826,5 +828,7 @@
             synchronizeMusicControls(); // Set initial state of controls
         };
     </script>
+<audio id="matchAudio"></audio>
+<audio id="finalAudio" src="audios/final_parabens.mp3"></audio>
 </body>
 </html>
